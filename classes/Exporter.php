@@ -1,17 +1,21 @@
 <?php
+
 use Illuminate\Support;
 use LSS\Array2Xml;
 
 // retrieves & formats data from the database for export
-class Exporter {
-    public function __construct() {
+class Exporter
+{
+    public function __construct()
+    {
     }
 
-    function getPlayerStats($search) {
+    function getPlayerStats($search)
+    {
         $where = [];
         if ($search->has('playerId')) $where[] = "roster.id = '" . $search['playerId'] . "'";
         if ($search->has('player')) $where[] = "roster.name = '" . $search['player'] . "'";
-        if ($search->has('team')) $where[] = "roster.team_code = '" . $search['team']. "'";
+        if ($search->has('team')) $where[] = "roster.team_code = '" . $search['team'] . "'";
         if ($search->has('position')) $where[] = "roster.pos = '" . $search['position'] . "'";
         if ($search->has('country')) $where[] = "roster.nationality = '" . $search['country'] . "'";
         $where = implode(' AND ', $where);
@@ -20,7 +24,10 @@ class Exporter {
             FROM player_totals
                 INNER JOIN roster ON (roster.id = player_totals.player_id)
             WHERE $where";
-        $data = query($sql) ?: [];
+        // dd($sql);
+        require_once('DB.php');
+        $DB = new DB();
+        $data = $DB->query($sql) ?: [];
 
         // calculate totals
         foreach ($data as &$row) {
@@ -32,14 +39,16 @@ class Exporter {
             $row['free_throws_pct'] = $row['free_throws_attempted'] ? (round($row['free_throws'] / $row['free_throws_attempted'], 2) * 100) . '%' : 0;
             $row['total_rebounds'] = $row['offensive_rebounds'] + $row['defensive_rebounds'];
         }
+        dd($data);
         return collect($data);
     }
 
-    function getPlayers($search) {
+    function getPlayers($search)
+    {
         $where = [];
         if ($search->has('playerId')) $where[] = "roster.id = '" . $search['playerId'] . "'";
         if ($search->has('player')) $where[] = "roster.name = '" . $search['player'] . "'";
-        if ($search->has('team')) $where[] = "roster.team_code = '" . $search['team']. "'";
+        if ($search->has('team')) $where[] = "roster.team_code = '" . $search['team'] . "'";
         if ($search->has('position')) $where[] = "roster.position = '" . $search['position'] . "'";
         if ($search->has('country')) $where[] = "roster.nationality = '" . $search['country'] . "'";
         $where = implode(' AND ', $where);
@@ -47,27 +56,30 @@ class Exporter {
             SELECT roster.*
             FROM roster
             WHERE $where";
-        return collect(query($sql))
-            ->map(function($item, $key) {
+        require_once('DB.php');
+        $DB = new DB();
+        return collect($DB->query($sql))
+            ->map(function ($item, $key) {
                 unset($item['id']);
                 return $item;
             });
     }
 
-    public function format($data, $format = 'html') {
-        
+    public function format($data, $format = 'html')
+    {
+
         // return the right data format
-        switch($format) {
+        switch ($format) {
             case 'xml':
                 header('Content-type: text/xml');
-                
+
                 // fix any keys starting with numbers
                 $keyMap = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
                 $xmlData = [];
                 foreach ($data->all() as $row) {
                     $xmlRow = [];
                     foreach ($row as $key => $value) {
-                        $key = preg_replace_callback('(\d)', function($matches) use ($keyMap) {
+                        $key = preg_replace_callback('(\d)', function ($matches) use ($keyMap) {
                             return $keyMap[$matches[0]] . '_';
                         }, $key);
                         $xmlRow[$key] = $value;
@@ -90,13 +102,13 @@ class Exporter {
                     return;
                 }
                 $csv = [];
-                
+
                 // extract headings
                 // replace underscores with space & ucfirst each word for a decent headings
                 $headings = collect($data->get(0))->keys();
-                $headings = $headings->map(function($item, $key) {
+                $headings = $headings->map(function ($item, $key) {
                     return collect(explode('_', $item))
-                        ->map(function($item, $key) {
+                        ->map(function ($item, $key) {
                             return ucfirst($item);
                         })
                         ->join(' ');
@@ -113,13 +125,13 @@ class Exporter {
                 if (!$data->count()) {
                     return $this->htmlTemplate('Sorry, no matching data was found');
                 }
-                
+
                 // extract headings
                 // replace underscores with space & ucfirst each word for a decent heading
                 $headings = collect($data->get(0))->keys();
-                $headings = $headings->map(function($item, $key) {
+                $headings = $headings->map(function ($item, $key) {
                     return collect(explode('_', $item))
-                        ->map(function($item, $key) {
+                        ->map(function ($item, $key) {
                             return ucfirst($item);
                         })
                         ->join(' ');
@@ -143,7 +155,8 @@ class Exporter {
     }
 
     // wrap html in a standard template
-    public function htmlTemplate($html) {
+    public function htmlTemplate($html)
+    {
         return '
 <html>
 <head>
@@ -169,5 +182,3 @@ class Exporter {
 </html>';
     }
 }
-
-?>

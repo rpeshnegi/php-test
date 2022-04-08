@@ -17,7 +17,9 @@ require_once('include/utils.php');
  */
 echo '<h1>Example Query</h1>';
 $teamSql = "SELECT * FROM team";
-$teamResult = query($teamSql);
+require_once('DB.php');
+$DB = new DB();
+$teamResult = $DB->query($teamSql);
 // dd($teamResult);
 echo asTable($teamResult);
 
@@ -58,5 +60,3 @@ echo '<h1>Report 1 - Best 3pt Shooters</h1>';
  */
 echo '<h1>Report 2 - Best 3pt Shooting Teams</h1>';
 // write your query here
-
-?>
