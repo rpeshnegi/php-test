@@ -3,10 +3,6 @@
 require_once('vendor/autoload.php');
 use Illuminate\Support;
 
-// global connection object
-global $mysqli_db;
-$mysqli_db = new mysqli('localhost', 'root', '', $database ?: 'employees');
-
 /**
  * Debug method - dumps a print_r of any passed variables and exits
  * @param mixed any number of variables you wish to inspect

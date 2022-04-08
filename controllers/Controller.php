@@ -18,14 +18,20 @@ class Controller {
                 $search = $this->args->filter(function($value, $key) use ($searchArgs) {
                     return in_array($key, $searchArgs);
                 });
-                $data = $exporter->getPlayerStats($search);
+
+                require_once('models/PlayerTotal.php');
+                $PlayerTotal = new PlayerTotal();
+                $data = $PlayerTotal->getPlayerStats($search);
                 break;
             case 'players':
                 $searchArgs = ['player', 'playerId', 'team', 'position', 'country'];
                 $search = $this->args->filter(function($value, $key) use ($searchArgs) {
                     return in_array($key, $searchArgs);
                 });
-                $data = $exporter->getPlayers($search);
+
+                require_once('models/Roster.php');
+                $Roster = new Roster();
+                $data = $Roster->getPlayers($search);
                 break;
         }
         if (!$data) {
