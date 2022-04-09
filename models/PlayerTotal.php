@@ -18,7 +18,7 @@ class PlayerTotal extends Model
             FROM player_totals
                 INNER JOIN roster ON (roster.id = player_totals.player_id)
             WHERE $where";
-        // dd($sql);
+
         $data = $this->query($sql) ?: [];
 
         // calculate totals
@@ -31,7 +31,7 @@ class PlayerTotal extends Model
             $row['free_throws_pct'] = $row['free_throws_attempted'] ? (round($row['free_throws'] / $row['free_throws_attempted'], 2) * 100) . '%' : 0;
             $row['total_rebounds'] = $row['offensive_rebounds'] + $row['defensive_rebounds'];
         }
-        dd($data);
+
         return collect($data);
     }
 }
